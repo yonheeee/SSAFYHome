@@ -29,8 +29,9 @@ public class LoginCheckFilter implements Filter {
 			"check",         // GET /auth?action=check
 			"logout",        // GET|POST /auth?action=logout
 			"findPassword",  // POST /auth?action=findPassword
-			"register"       // POST /member?action=register
-	));
+			"register",       // POST /member?action=register
+			"findId"
+			));
 
 	@Override
 	public void doFilter(ServletRequest req, ServletResponse res, FilterChain chain)

@@ -16,11 +16,12 @@ import java.io.IOException;
 /**
  * 인증 컨트롤러  /auth
  *
- * GET  action=check        세션 로그인 여부 확인 (nav 렌더링용)
- * GET  action=logout       로그아웃
- * POST action=login        로그인
- * POST action=logout       로그아웃
- * POST action=findPassword 비밀번호 찾기
+ * GET  action=check
+ * GET  action=logout
+ * POST action=login
+ * POST action=logout
+ * POST action=findId
+ * POST action=findPassword
  */
 @WebServlet("/auth")
 public class AuthController extends HttpServlet implements ControllerHelper {
@@ -28,13 +29,12 @@ public class AuthController extends HttpServlet implements ControllerHelper {
 
     private final MemberService memberService = MemberServiceImpl.getInstance();
 
-    // ── GET ──────────────────────────────────────────────────────────────────
-
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         String action = param(request, "action");
+
         switch (action) {
             case "check"  -> checkSession(request, response);
             case "logout" -> logout(request, response);
@@ -42,33 +42,27 @@ public class AuthController extends HttpServlet implements ControllerHelper {
         }
     }
 
-    // ── POST ─────────────────────────────────────────────────────────────────
-
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
         request.setCharacterEncoding("UTF-8");
         String action = param(request, "action");
+
         switch (action) {
             case "login"        -> login(request, response);
             case "logout"       -> logout(request, response);
+            case "findId"       -> findId(request, response);
             case "findPassword" -> findPassword(request, response);
             default             -> response.sendError(HttpServletResponse.SC_BAD_REQUEST);
         }
     }
 
-    // ── 세션 확인 (nav 렌더링) ────────────────────────────────────────────────
-
-    /**
-     * GET /auth?action=check
-     * 로그인 중: {"result":"success","name":"홍길동"}
-     * 비로그인: {"result":"fail"}
-     */
     private void checkSession(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
         HttpSession session = request.getSession(false);
+
         if (session != null && session.getAttribute("loginMember") != null) {
             Member m = (Member) session.getAttribute("loginMember");
             sendJson(response, "{\"result\":\"success\",\"name\":\"" + escape(m.getName()) + "\"}");
@@ -77,12 +71,10 @@ public class AuthController extends HttpServlet implements ControllerHelper {
         }
     }
 
-    // ── 로그인 ────────────────────────────────────────────────────────────────
-
     private void login(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        String id       = param(request, "id");
+        String id = param(request, "id");
         String password = param(request, "password");
 
         if (id.isEmpty() || password.isEmpty()) {
@@ -92,12 +84,12 @@ public class AuthController extends HttpServlet implements ControllerHelper {
 
         try {
             Member member = memberService.login(id, password);
+
             if (member == null) {
                 sendJson(response, buildResult(false, "아이디 또는 비밀번호가 일치하지 않습니다."));
                 return;
             }
 
-            // 세션 고정 공격 방지
             HttpSession old = request.getSession(false);
             if (old != null) old.invalidate();
 
@@ -112,8 +104,6 @@ public class AuthController extends HttpServlet implements ControllerHelper {
         }
     }
 
-    // ── 로그아웃 ──────────────────────────────────────────────────────────────
-
     private void logout(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
@@ -121,6 +111,7 @@ public class AuthController extends HttpServlet implements ControllerHelper {
         if (session != null) session.invalidate();
 
         String xhr = request.getHeader("X-Requested-With");
+
         if ("XMLHttpRequest".equals(xhr)) {
             sendJson(response, buildResult(true, null));
         } else {
@@ -128,12 +119,36 @@ public class AuthController extends HttpServlet implements ControllerHelper {
         }
     }
 
-    // ── 비밀번호 찾기 ─────────────────────────────────────────────────────────
+    private void findId(HttpServletRequest request, HttpServletResponse response)
+            throws IOException {
+
+        String name = param(request, "name");
+        String phone = param(request, "phone");
+
+        if (name.isEmpty() || phone.isEmpty()) {
+            sendJson(response, buildResult(false, "이름과 전화번호를 입력해 주세요."));
+            return;
+        }
+
+        try {
+            String id = memberService.findId(name, phone);
+
+            if (id == null) {
+                sendJson(response, buildResult(false, "일치하는 회원 정보가 없습니다."));
+                return;
+            }
+
+            sendJson(response, "{\"result\":\"success\",\"id\":\"" + escape(id) + "\"}");
+
+        } catch (Exception e) {
+            sendJson(response, buildResult(false, e.getMessage()));
+        }
+    }
 
     private void findPassword(HttpServletRequest request, HttpServletResponse response)
             throws IOException {
 
-        String id    = param(request, "id");
+        String id = param(request, "id");
         String phone = param(request, "phone");
 
         if (id.isEmpty() || phone.isEmpty()) {
@@ -143,11 +158,14 @@ public class AuthController extends HttpServlet implements ControllerHelper {
 
         try {
             String password = memberService.findPassword(id, phone);
+
             if (password == null) {
                 sendJson(response, buildResult(false, "일치하는 회원 정보가 없습니다."));
                 return;
             }
+
             sendJson(response, "{\"result\":\"success\",\"password\":\"" + escape(password) + "\"}");
+
         } catch (Exception e) {
             sendJson(response, buildResult(false, e.getMessage()));
         }

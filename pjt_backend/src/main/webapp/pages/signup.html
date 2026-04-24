@@ -102,36 +102,54 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../js/main.js"></script>
 <script>
-document.getElementById('signup-form').addEventListener('submit', function(e) {
+document.getElementById('signup-form').addEventListener('submit', async function(e) {
   e.preventDefault();
 
-  const userId = document.getElementById('userId').value.trim();
-  const userPw = document.getElementById('userPw').value.trim();
-  const userName = document.getElementById('userName').value.trim();
-  const userAddr = document.getElementById('userAddr').value.trim();
-  const userPhone = document.getElementById('userPhone').value.trim();
+  const id = document.getElementById('userId').value.trim();
+  const password = document.getElementById('userPw').value.trim();
+  const name = document.getElementById('userName').value.trim();
+  const address = document.getElementById('userAddr').value.trim();
+  const phone = document.getElementById('userPhone').value.trim();
 
-  if (!userId || !userPw || !userName || !userPhone) {
+  if (!id || !password || !name || !phone) {
     alert('필수 항목을 모두 입력해주세요.');
     return;
   }
 
   const pwRegex = /^(?=.*[a-zA-Z])(?=.*\d).{4,}$/;
-  if (!pwRegex.test(userPw)) {
+  if (!pwRegex.test(password)) {
     alert('비밀번호는 영문과 숫자를 조합하여 4자 이상 입력해주세요.');
     return;
   }
 
-  const users = getUsers();
-  if (users.find(u => u.id === userId)) {
-    alert('이미 사용 중인 아이디입니다.');
-    return;
-  }
+  try {
+    const response = await fetch('../member?action=register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: new URLSearchParams({
+        id,
+        password,
+        name,
+        address,
+        phone
+      })
+    });
 
-  users.push({ id: userId, pw: userPw, name: userName, addr: userAddr, phone: userPhone });
-  saveUsers(users);
-  alert('회원가입이 완료되었습니다.');
-  location.href = 'login.html';
+    const json = await response.json();
+
+    if (json.result === 'success') {
+      alert('회원가입이 완료되었습니다.');
+      location.href = 'login.html';
+    } else {
+      alert(json.message || '회원가입에 실패했습니다.');
+    }
+  } catch (error) {
+    console.error(error);
+    alert('회원가입 요청 중 오류가 발생했습니다.');
+  }
 });
 </script>
 </body>

@@ -102,7 +102,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="../js/main.js"></script>
 <script>
-const API_BASE = '..';
+const MEMBER_API_BASE = '..';
 
 async function requestJson(url, options = {}) {
   const response = await fetch(url, {
@@ -110,7 +110,8 @@ async function requestJson(url, options = {}) {
     headers: {
       'X-Requested-With': 'XMLHttpRequest',
       ...(options.headers || {})
-    }
+    },
+    credentials: 'same-origin'
   });
 
   const json = await response.json().catch(() => ({}));
@@ -124,7 +125,7 @@ async function requestJson(url, options = {}) {
 
 document.addEventListener('DOMContentLoaded', async function() {
   try {
-    const member = await requestJson(`${API_BASE}/member?action=info`);
+    const member = await requestJson(`${MEMBER_API_BASE}/member?action=info`);
 
     if (member.result === 'fail') {
       alert(member.message || '로그인이 필요합니다.');
@@ -137,6 +138,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     document.getElementById('mUserName').value = member.name || '';
     document.getElementById('mUserAddr').value = member.address || '';
     document.getElementById('mUserPhone').value = member.phone || '';
+
   } catch (error) {
     alert(error.message || '회원 정보를 불러오지 못했습니다.');
     location.href = 'login.html';
@@ -172,15 +174,18 @@ async function saveEdit() {
   }
 
   try {
-    const json = await requestJson(`${API_BASE}/member?action=update`, {
+    const json = await requestJson(`${MEMBER_API_BASE}/member?action=update`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+      },
       body: new URLSearchParams({ password, name, address, phone })
     });
 
     if (json.result === 'success') {
       alert('회원 정보가 수정되었습니다.');
       setReadonlyMode();
+      await updateNavbar();
     } else {
       alert(json.message || '회원 정보 수정에 실패했습니다.');
     }
@@ -204,7 +209,7 @@ async function withdrawMember() {
   if (!confirm('정말로 탈퇴하시겠습니까?')) return;
 
   try {
-    const json = await requestJson(`${API_BASE}/member?action=delete`, {
+    const json = await requestJson(`${MEMBER_API_BASE}/member?action=delete`, {
       method: 'POST'
     });
 

@@ -13,17 +13,24 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container">
     <a class="navbar-brand fw-bold" href="index.html">구해줘 Home</a>
+
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
       <span class="navbar-toggler-icon"></span>
     </button>
+
     <div class="collapse navbar-collapse" id="navbarContent">
 
       <!-- 비로그인 상태 -->
       <div class="d-flex align-items-center w-100" id="nav-logged-out">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="pages/notice.html">공지사항</a></li>
-          <li class="nav-item"><a class="nav-link" href="#news-section">오늘의 뉴스</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="pages/notice.html">공지사항</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#news-section">오늘의 뉴스</a>
+          </li>
         </ul>
+
         <div class="d-flex gap-2">
           <a href="pages/signup.html" class="btn btn-outline-light btn-sm">Sign Up</a>
           <a href="pages/login.html" class="btn btn-outline-light btn-sm">Login</a>
@@ -33,17 +40,30 @@
       <!-- 로그인 상태 -->
       <div class="d-flex align-items-center w-100 d-none" id="nav-logged-in">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-          <li class="nav-item"><a class="nav-link" href="pages/notice.html">공지사항</a></li>
-          <li class="nav-item"><a class="nav-link" href="#news-section">오늘의 뉴스</a></li>
-          <li class="nav-item"><a class="nav-link" href="#">자유글</a></li>
-          <li class="nav-item"><a class="nav-link" href="pages/environment.html">주변탐방</a></li>
-          <li class="nav-item"><a class="nav-link" href="pages/interest.html">관심지역 설정</a></li>
-          <li class="nav-item"><a class="nav-link" href="pages/explore.html">관심지역 둘러보기</a></li>
+          <li class="nav-item">
+            <a class="nav-link" href="pages/notice.html">공지사항</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#news-section">오늘의 뉴스</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#">자유글</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="pages/environment.html">주변탐방</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="pages/interest.html">관심지역 설정</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="pages/explore.html">관심지역 둘러보기</a>
+          </li>
         </ul>
+
         <div class="d-flex gap-2 align-items-center">
           <span class="text-white small" id="nav-user-name"></span>
           <a href="pages/member.html" class="btn btn-outline-light btn-sm">회원정보</a>
-          <button onclick="logout()" class="btn btn-outline-light btn-sm">Logout</button>
+          <button type="button" onclick="logout()" class="btn btn-outline-light btn-sm">Logout</button>
         </div>
       </div>
 
@@ -56,26 +76,38 @@
   <!-- Hero Section -->
   <section class="hero-section">
     <div class="hero-overlay"></div>
+
     <div class="container text-center">
       <h1 class="display-4 fw-bold mb-3">구해줘 HOME!!</h1>
       <p class="lead mb-5">우리를 위한 집</p>
+
       <div class="row justify-content-center g-2">
         <div class="col-md-4 col-sm-12">
-          <select class="form-select" id="hero-sido" onchange="populateGugun(this.value,'hero-gugun'); document.getElementById('hero-dong').innerHTML='<option value=&quot;&quot;>읍/면/동 선택</option>';">
+          <select
+            class="form-select"
+            id="hero-sido"
+            onchange="populateGugun(this.value,'hero-gugun'); document.getElementById('hero-dong').innerHTML='<option value=&quot;&quot;>읍/면/동 선택</option>';"
+          >
             <option value="">시/도 선택</option>
           </select>
         </div>
-        <div class="col-md-4 col-sm-12">
-          <select class="form-select" id="hero-gugun" onchange="populateDong(document.getElementById('hero-sido').value, this.value, 'hero-dong')">
 
+        <div class="col-md-4 col-sm-12">
+          <select
+            class="form-select"
+            id="hero-gugun"
+            onchange="populateDong(document.getElementById('hero-sido').value, this.value, 'hero-dong')"
+          >
             <option value="">시/군/구 선택</option>
           </select>
         </div>
+
         <div class="col-md-4 col-sm-12">
           <select class="form-select" id="hero-dong">
             <option value="">읍/면/동 선택</option>
           </select>
         </div>
+
         <div class="col-12 mt-3">
           <button class="btn btn-primary btn-lg px-5" onclick="heroSearch()">조회</button>
         </div>
@@ -87,6 +119,7 @@
   <section class="py-5 bg-light">
     <div class="container">
       <h3 class="text-center mb-4">지혜롭게 내집 마련하기</h3>
+
       <div class="row g-4">
         <div class="col-md-4">
           <div class="card h-100 shadow-sm">
@@ -97,6 +130,7 @@
             </div>
           </div>
         </div>
+
         <div class="col-md-4">
           <div class="card h-100 shadow-sm">
             <div class="card-body text-center">
@@ -106,6 +140,7 @@
             </div>
           </div>
         </div>
+
         <div class="col-md-4">
           <div class="card h-100 shadow-sm">
             <div class="card-body text-center">
@@ -116,6 +151,7 @@
           </div>
         </div>
       </div>
+
     </div>
   </section>
 
@@ -123,40 +159,49 @@
   <section class="py-5" id="news-section">
     <div class="container">
       <h3 class="mb-4">부동산 뉴스</h3>
+
       <ul class="list-group list-group-flush">
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <a href="#" class="text-decoration-none text-dark">강남3구·용산 또 내렸다 … 한강벨트 '절세 매물'도 급증</a>
           <span class="badge bg-primary rounded-pill">한국경제</span>
         </li>
+
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <a href="#" class="text-decoration-none text-dark">신고가 새로 쓴 마포 아파트…국평 30억 시대 열렸다</a>
           <span class="badge bg-primary rounded-pill">한국경제</span>
         </li>
+
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <a href="#" class="text-decoration-none text-dark">의왕서 '반값 아파트' 무순위 청약…5억 시세차익 기대</a>
           <span class="badge bg-primary rounded-pill">한국경제</span>
         </li>
+
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <a href="#" class="text-decoration-none text-dark">국민 46% "향후 1년간 집값 내릴 것…대통령 추진력 신뢰"</a>
           <span class="badge bg-primary rounded-pill">한국경제</span>
         </li>
+
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <a href="#" class="text-decoration-none text-dark">"강남 20분이면 간다"…'17㎞ 황금라인'에 들썩이는 동네</a>
           <span class="badge bg-primary rounded-pill">한국경제</span>
         </li>
+
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <a href="#" class="text-decoration-none text-dark">가락프라자, 1059가구로 재건축…양평 신동아도 통합심의 통과</a>
           <span class="badge bg-primary rounded-pill">한국경제</span>
         </li>
+
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <a href="#" class="text-decoration-none text-dark">다주택자 압박·보유세 부담 … 경매 시장도 '주춤'</a>
           <span class="badge bg-primary rounded-pill">한국경제</span>
         </li>
+
         <li class="list-group-item d-flex justify-content-between align-items-center">
           <a href="#" class="text-decoration-none text-dark">끊이지 않는 성수4 시공사 선정 '잡음'</a>
           <span class="badge bg-primary rounded-pill">한국경제</span>
         </li>
       </ul>
+
     </div>
   </section>
 
@@ -172,6 +217,7 @@
         <p class="mb-1">1544-9001</p>
         <p class="mb-0">admin@ssafy.com</p>
       </div>
+
       <div class="col-md-8 d-flex align-items-center justify-content-md-end">
         <p class="mb-0 text-muted">&copy; 2026 구해줘 Home. All rights reserved.</p>
       </div>
@@ -182,6 +228,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="js/main.js"></script>
+
 <script>
   document.addEventListener('DOMContentLoaded', function() {
     loadRegionData().then(() => populateSido('hero-sido'));
@@ -191,7 +238,12 @@
     const sidoSel = document.getElementById('hero-sido');
     const gugunSel = document.getElementById('hero-gugun');
     const dongSel = document.getElementById('hero-dong');
-    if (!sidoSel.value) { alert('시/도를 선택해주세요.'); return; }
+
+    if (!sidoSel.value) {
+      alert('시/도를 선택해주세요.');
+      return;
+    }
+
     const params = new URLSearchParams({
       sido: sidoSel.value,
       sidoName: sidoSel.options[sidoSel.selectedIndex].text,
@@ -200,8 +252,10 @@
       dong: dongSel.value,
       dongName: dongSel.options[dongSel.selectedIndex].text
     });
+
     location.href = 'pages/search.html?' + params.toString();
   }
 </script>
+
 </body>
 </html>

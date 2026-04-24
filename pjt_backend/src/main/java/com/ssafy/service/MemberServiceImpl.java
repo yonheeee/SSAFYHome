@@ -109,4 +109,20 @@ public class MemberServiceImpl implements MemberService{
 		return null;
 	}
 
+	// 아이디 찾기
+	@Override
+	public String findId(String name, String phone) throws Exception {
+		if (name == null || phone == null) {
+			throw new IllegalArgumentException("이름과 전화번호를 입력해주세요");
+		}
+
+		for (Member member : store.values()) {
+			if (name.equals(member.getName()) && phone.equals(member.getPhone())) {
+				return member.getId();
+			}
+		}
+
+		return null;
+	}
+
 }
