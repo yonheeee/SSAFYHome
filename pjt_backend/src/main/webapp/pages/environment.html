@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>환경정보 - 구해줘 Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="../index.html">구해줘 Home</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <div class="d-flex align-items-center w-100" id="nav-logged-out">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="notice.html">공지사항</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#news-section">오늘의 뉴스</a></li>
+        </ul>
+        <div class="d-flex gap-2">
+          <a href="signup.html" class="btn btn-outline-light btn-sm">Sign Up</a>
+          <a href="login.html" class="btn btn-outline-light btn-sm">Login</a>
+        </div>
+      </div>
+      <div class="d-flex align-items-center w-100" id="nav-logged-in" style="display:none">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="notice.html">공지사항</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#news-section">오늘의 뉴스</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">자유글</a></li>
+          <li class="nav-item"><a class="nav-link active" href="environment.html">주변탐방</a></li>
+          <li class="nav-item"><a class="nav-link" href="interest.html">관심지역 설정</a></li>
+          <li class="nav-item"><a class="nav-link" href="explore.html">관심지역 둘러보기</a></li>
+        </ul>
+        <div class="d-flex gap-2 align-items-center">
+          <span class="text-white small" id="nav-user-name"></span>
+          <a href="member.html" class="btn btn-outline-light btn-sm">회원정보</a>
+          <button onclick="logout()" class="btn btn-outline-light btn-sm">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="flex-grow-1">
+  <div class="container py-4">
+    <h2 class="mb-4">환경정보</h2>
+
+    <!-- 검색 필터 -->
+    <div class="row g-2 mb-3">
+      <div class="col-md-2">
+        <select class="form-select" id="env-sido">
+          <option value="">시/도 선택</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select class="form-select" id="env-gugun">
+          <option value="">시/군/구 선택</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <select class="form-select" id="env-dong">
+          <option value="">읍/면/동 선택</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" id="env-type">
+          <option value="">유형 선택</option>
+          <option value="green">녹지 정보</option>
+          <option value="water">폐수 배출</option>
+          <option value="air">대기배출 정보</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-primary w-100" id="btn-search-env">검색</button>
+      </div>
+    </div>
+
+    <!-- 검색 결과 요약 -->
+    <div id="env-search-summary" class="alert alert-info d-none mb-3"></div>
+
+    <div class="row">
+      <!-- 좌측 패널 -->
+      <div class="col-md-4">
+        <h5>관심 지역 목록</h5>
+        <div id="env-interests" class="list-group mb-3"></div>
+
+        <h5>거래 정보</h5>
+        <div id="env-deals" class="list-group" style="max-height:250px;overflow-y:auto;"></div>
+      </div>
+
+      <!-- 지도 영역 -->
+      <div class="col-md-8">
+        <ul class="nav nav-tabs mb-2" id="envMapTabs">
+          <li class="nav-item">
+            <button class="nav-link active" data-tab="map">지도</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-tab="satellite">위성</button>
+          </li>
+        </ul>
+        <div id="env-map" style="height:450px;"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="bg-dark text-white py-4 mt-auto">
+  <div class="container">
+    <h5>Find Us</h5>
+    <p class="mb-1">(06234) 서울시 강남구 테헤란로 멀티스퀘어</p>
+    <p class="mb-1">1544-9001</p>
+    <p class="mb-0">admin@ssafy.com</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/main.js"></script>
+<script>
+const VWORLD_KEY = '9E281788-C8F2-328F-A965-E737BA72C694';
+const envMap = L.map('env-map').setView([37.5665, 126.978], 13);
+
+const baseTile = L.tileLayer(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Base/{z}/{y}/{x}.png`, {
+  attribution: '© VWorld', maxZoom: 19
+}).addTo(envMap);
+
+const satTile = L.tileLayer(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Satellite/{z}/{y}/{x}.jpeg`, {
+  attribution: '© VWorld', maxZoom: 19
+});
+
+const hybridTile = L.tileLayer(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Hybrid/{z}/{y}/{x}.png`, {
+  maxZoom: 19
+});
+
+document.querySelectorAll('#envMapTabs .nav-link').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('#envMapTabs .nav-link').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    if (this.dataset.tab === 'satellite') {
+      envMap.removeLayer(baseTile);
+      satTile.addTo(envMap);
+      hybridTile.addTo(envMap);
+    } else {
+      envMap.removeLayer(satTile);
+      envMap.removeLayer(hybridTile);
+      baseTile.addTo(envMap);
+    }
+  });
+});
+
+let sigunguCoords = {};
+fetch('../data/sigungu-coords.json').then(r => r.json()).then(d => sigunguCoords = d);
+
+// === 환경 더미 데이터 ===
+const envTypeConfig = {
+  green: { label: '녹지 정보', color: '#198754', icon: 'G',
+    names: ['도시공원', '근린공원', '어린이공원', '소생태공원', '도시숲', '가로수길', '녹지대', '생태공원', '수변공원', '자연마당'] },
+  water: { label: '폐수 배출', color: '#dc3545', icon: 'W',
+    names: ['산업폐수처리시설', '공공하수처리시설', '제조업 배출시설', '폐수종말처리장', '오수처리시설', '축산폐수처리장', '도금업체', '섬유염색공장'] },
+  air: { label: '대기배출 정보', color: '#fd7e14', icon: 'A',
+    names: ['대기배출시설', '발전소', '소각시설', '도료제조업', '주유소', '보일러시설', '인쇄업체', '화학공장', '시멘트공장', '아스팔트공장'] }
+};
+
+function generateEnvData(centerLat, centerLng, type) {
+  const config = envTypeConfig[type];
+  if (!config) return [];
+  const count = 4 + Math.floor(Math.random() * 7);
+  const items = [];
+  for (let i = 0; i < count; i++) {
+    const lat = centerLat + (Math.random() - 0.5) * 0.02;
+    const lng = centerLng + (Math.random() - 0.5) * 0.025;
+    items.push({
+      name: config.names[i % config.names.length],
+      lat: lat,
+      lng: lng,
+      type: type,
+      detail: type === 'green'
+        ? '면적: ' + (500 + Math.floor(Math.random() * 50000)) + 'm²'
+        : type === 'water'
+        ? '배출량: ' + (10 + Math.floor(Math.random() * 500)) + 'm³/일'
+        : '배출량: ' + (1 + Math.floor(Math.random() * 100)) + 'ton/년'
+    });
+  }
+  return items;
+}
+
+// === 거래 데이터 로드 ===
+let aptDealData = [];
+fetch('../data/apt-deal.json').then(r => r.json()).then(d => {
+  aptDealData = (d && d.response && d.response.body && d.response.body.items && d.response.body.items.item) || [];
+}).catch(() => {});
+
+function loadDealsForRegion(gugunCode) {
+  const container = document.getElementById('env-deals');
+  container.innerHTML = '';
+  const code5 = gugunCode ? gugunCode.substring(0, 5) : '';
+  const filtered = aptDealData.filter(d => {
+    const dCode = String(d.지역코드 || d.regionCode || '');
+    return dCode.startsWith(code5);
+  }).slice(0, 10);
+
+  if (filtered.length === 0) {
+    container.innerHTML = '<div class="list-group-item text-muted">해당 지역의 거래 정보가 없습니다.</div>';
+    return;
+  }
+  filtered.forEach(function(deal) {
+    const name = deal.아파트 || deal.aptName || deal.연립다세대 || '-';
+    const price = deal.거래금액 || deal.dealAmount || '-';
+    const dong = deal.법정동 || deal.dong || '-';
+    const year = deal.년 || deal.dealYear || '';
+    const month = deal.월 || deal.dealMonth || '';
+    const el = document.createElement('div');
+    el.className = 'list-group-item py-2';
+    el.innerHTML = '<div class="fw-semibold">' + name + '</div>' +
+      '<small class="text-muted">' + dong + ' | ' + formatPrice(String(price).replace(/,/g, '').trim()) + ' | ' + year + '.' + month + '</small>';
+    container.appendChild(el);
+  });
+}
+
+// === 마커 관리 ===
+let envMarkers = [];
+let interestMarkers = [];
+let selectedInterest = null;
+
+function clearEnvMarkers() {
+  envMarkers.forEach(m => envMap.removeLayer(m));
+  envMarkers = [];
+}
+
+function clearInterestMarkers() {
+  interestMarkers.forEach(m => envMap.removeLayer(m));
+  interestMarkers = [];
+}
+
+// === 환경 검색 ===
+function searchEnvironment() {
+  const type = document.getElementById('env-type').value;
+  if (!type) {
+    alert('유형을 선택해주세요.');
+    return;
+  }
+
+  const gugunSel = document.getElementById('env-gugun');
+  const gugunCode = gugunSel.value;
+  const gugunName = gugunSel.options[gugunSel.selectedIndex] ? gugunSel.options[gugunSel.selectedIndex].text : '';
+  const sidoSel = document.getElementById('env-sido');
+  const sidoName = sidoSel.options[sidoSel.selectedIndex] ? sidoSel.options[sidoSel.selectedIndex].text : '';
+
+  let centerLat = 37.5665, centerLng = 126.978;
+
+  if (gugunCode && sigunguCoords[gugunCode]) {
+    const coord = sigunguCoords[gugunCode];
+    centerLat = coord[0];
+    centerLng = coord[1];
+    envMap.setView(coord, 14);
+  } else if (selectedInterest) {
+    const match = sigunguData.find(s => s.name === selectedInterest.gugun);
+    if (match && sigunguCoords[match.code]) {
+      const coord = sigunguCoords[match.code];
+      centerLat = coord[0];
+      centerLng = coord[1];
+      envMap.setView(coord, 14);
+    }
+  }
+
+  clearEnvMarkers();
+  const config = envTypeConfig[type];
+  const items = generateEnvData(centerLat, centerLng, type);
+
+  const summary = document.getElementById('env-search-summary');
+  const locationLabel = gugunName || (selectedInterest ? selectedInterest.gugun : '현재 지역');
+  summary.classList.remove('d-none');
+  summary.textContent = `${config.label} 검색 결과: ${locationLabel} 주변 ${items.length}건`;
+
+  const envIcon = function(cfg) {
+    return L.divIcon({
+      html: '<div style="background:' + cfg.color + ';color:#fff;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:bold;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.3);">' + cfg.icon + '</div>',
+      iconSize: [30, 30],
+      iconAnchor: [15, 15],
+      className: ''
+    });
+  };
+
+  items.forEach(function(item) {
+    const marker = L.marker([item.lat, item.lng], { icon: envIcon(config) }).addTo(envMap);
+    marker.bindPopup(
+      '<div style="min-width:180px;">' +
+      '<strong>' + item.name + '</strong><br>' +
+      '<span class="badge" style="background:' + config.color + ';">' + config.label + '</span><br>' +
+      '<small>' + item.detail + '</small>' +
+      '</div>'
+    );
+    envMarkers.push(marker);
+  });
+
+  if (gugunCode) {
+    loadDealsForRegion(gugunCode);
+  }
+}
+
+// === 관심지역 목록 ===
+function loadEnvInterests() {
+  const container = document.getElementById('env-interests');
+  const interests = getInterests();
+  container.innerHTML = '';
+  if (interests.length === 0) {
+    container.innerHTML = '<div class="list-group-item text-muted">등록된 관심지역이 없습니다.</div>';
+    return;
+  }
+  interests.forEach(function(item) {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'list-group-item list-group-item-action';
+    el.textContent = item.sido + ' ' + item.gugun + ' ' + item.dong;
+    el.addEventListener('click', function() {
+      document.querySelectorAll('#env-interests .list-group-item').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+      selectedInterest = item;
+
+      const match = sigunguData.find(s => s.name === item.gugun);
+      if (match && sigunguCoords[match.code]) {
+        const coord = sigunguCoords[match.code];
+        envMap.setView(coord, 15);
+        clearInterestMarkers();
+        const marker = L.marker(coord).addTo(envMap)
+          .bindPopup('<strong>' + item.sido + ' ' + item.gugun + ' ' + item.dong + '</strong>')
+          .openPopup();
+        interestMarkers.push(marker);
+        loadDealsForRegion(match.code);
+      }
+
+      // 유형이 선택되어 있으면 자동 검색
+      if (document.getElementById('env-type').value) {
+        searchEnvironment();
+      }
+    });
+    container.appendChild(el);
+  });
+}
+
+// === 초기화 ===
+document.addEventListener('DOMContentLoaded', function() {
+  if (!requireLogin()) return;
+  loadRegionData().then(function() {
+    populateSido('env-sido');
+    loadEnvInterests();
+  });
+
+  document.getElementById('env-sido').addEventListener('change', function() {
+    populateGugun(this.value, 'env-gugun');
+    document.getElementById('env-dong').innerHTML = '<option value="">읍/면/동 선택</option>';
+  });
+
+  document.getElementById('env-gugun').addEventListener('change', function() {
+    const sido = document.getElementById('env-sido').value;
+    populateDong(sido, this.value, 'env-dong');
+  });
+
+  document.querySelectorAll('#envMapTabs .nav-link').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('#envMapTabs .nav-link').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+    });
+  });
+
+  document.getElementById('btn-search-env').addEventListener('click', searchEnvironment);
+});
+</script>
+</body>
+</html>

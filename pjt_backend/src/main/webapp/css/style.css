@@ -1,0 +1,19 @@
+/* 히어로 섹션 */
+.hero-section {
+  background: url('https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=1200') center/cover;
+  position: relative;
+  padding: 100px 0;
+  color: white;
+}
+.hero-overlay {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.5);
+}
+.hero-section .container { position: relative; z-index: 1; }
+
+/* 기타 최소 스타일 */
+body { min-height: 100vh; display: flex; flex-direction: column; }
+main { flex: 1; }
+footer { margin-top: auto; }
+.map-placeholder { background: #e9ecef; min-height: 400px; display: flex; align-items: center; justify-content: center; }

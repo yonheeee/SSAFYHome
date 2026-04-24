@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>실거래가 검색 - 구해줘 Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="../index.html">구해줘 Home</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <div class="d-flex align-items-center w-100" id="nav-logged-out">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="notice.html">공지사항</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#news-section">오늘의 뉴스</a></li>
+        </ul>
+        <div class="d-flex gap-2">
+          <a href="signup.html" class="btn btn-outline-light btn-sm">Sign Up</a>
+          <a href="login.html" class="btn btn-outline-light btn-sm">Login</a>
+        </div>
+      </div>
+      <div class="d-flex align-items-center w-100" id="nav-logged-in" style="display:none">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="notice.html">공지사항</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#news-section">오늘의 뉴스</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">자유글</a></li>
+          <li class="nav-item"><a class="nav-link" href="environment.html">주변탐방</a></li>
+          <li class="nav-item"><a class="nav-link" href="interest.html">관심지역 설정</a></li>
+          <li class="nav-item"><a class="nav-link" href="explore.html">관심지역 둘러보기</a></li>
+        </ul>
+        <div class="d-flex gap-2 align-items-center">
+          <span class="text-white small" id="nav-user-name"></span>
+          <a href="member.html" class="btn btn-outline-light btn-sm">회원정보</a>
+          <button onclick="logout()" class="btn btn-outline-light btn-sm">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<!-- 검색 조건 영역 -->
+<div class="container-fluid bg-light py-3 border-bottom">
+  <div class="container">
+    <div class="row g-2 align-items-end">
+      <div class="col-md-3">
+        <label class="form-label fw-semibold mb-1">시도</label>
+        <select class="form-select" id="sido-select">
+          <option value="">시도 선택</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label fw-semibold mb-1">시군구</label>
+        <select class="form-select" id="gugun-select" disabled>
+          <option value="">시군구 선택</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label fw-semibold mb-1">읍면동</label>
+        <select class="form-select" id="dong-select" disabled>
+          <option value="">읍면동 선택</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label fw-semibold mb-1">거래유형</label>
+        <select class="form-select" id="deal-type-select">
+          <option value="apt-deal">아파트 매매</option>
+          <option value="apt-rent">아파트 전월세</option>
+          <option value="multi-deal">연립다세대 매매</option>
+          <option value="multi-rent">연립다세대 전월세</option>
+        </select>
+      </div>
+      <div class="col-md-1">
+        <button class="btn btn-primary w-100" id="search-btn">조회</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 메인 영역 -->
+<div class="container-fluid py-3">
+  <div class="row g-3">
+    <!-- 거래 목록 -->
+    <div class="col-md-4">
+      <h5 class="fw-bold mb-3">거래 정보</h5>
+      <div id="deal-list">
+        <p class="text-muted">지역을 선택하고 조회 버튼을 클릭하세요.</p>
+      </div>
+    </div>
+    <!-- 지도 영역 -->
+    <div class="col-md-8">
+      <ul class="nav nav-tabs mb-2" id="mapTabs">
+        <li class="nav-item">
+          <button class="nav-link active" data-tab="map">지도</button>
+        </li>
+        <li class="nav-item">
+          <button class="nav-link" data-tab="satellite">위성</button>
+        </li>
+      </ul>
+      <div id="map" style="height:400px;"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 상세정보 Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="dealOffcanvas">
+  <div class="offcanvas-header">
+    <h5 class="offcanvas-title" id="offcanvas-title">거래 상세정보</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body" id="offcanvas-body">
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="bg-dark text-white py-4 mt-4">
+  <div class="container">
+    <div class="row">
+      <div class="col-md-4">
+        <h6 class="fw-bold">Find Us</h6>
+        <p class="mb-1 small">서울특별시 강남구 테헤란로 212</p>
+        <p class="mb-1 small">Tel: 02-1234-5678</p>
+        <p class="mb-0 small">Email: contact@ssafyhome.kr</p>
+      </div>
+      <div class="col-md-4">
+        <h6 class="fw-bold">바로가기</h6>
+        <ul class="list-unstyled small">
+          <li><a href="../index.html" class="text-white text-decoration-none">메인</a></li>
+          <li><a href="../pages/notice.html" class="text-white text-decoration-none">공지사항</a></li>
+        </ul>
+      </div>
+      <div class="col-md-4">
+        <h6 class="fw-bold">구해줘 Home</h6>
+        <p class="small">공공데이터를 활용한 부동산 실거래가 조회 서비스</p>
+        <p class="small mb-0">&copy; 2025 SSAFY Home. All rights reserved.</p>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/main.js"></script>
+<script>
+const VWORLD_KEY = '9E281788-C8F2-328F-A965-E737BA72C694';
+const map = L.map('map').setView([37.5665, 126.978], 13);
+
+const baseTile = L.tileLayer(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Base/{z}/{y}/{x}.png`, {
+  attribution: '© VWorld',
+  maxZoom: 19
+}).addTo(map);
+
+const satTile = L.tileLayer(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Satellite/{z}/{y}/{x}.jpeg`, {
+  attribution: '© VWorld',
+  maxZoom: 19
+});
+
+const hybridTile = L.tileLayer(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Hybrid/{z}/{y}/{x}.png`, {
+  maxZoom: 19
+});
+
+document.querySelectorAll('[data-tab]').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('[data-tab]').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    if (this.dataset.tab === 'satellite') {
+      map.removeLayer(baseTile);
+      satTile.addTo(map);
+      hybridTile.addTo(map);
+    } else {
+      map.removeLayer(satTile);
+      map.removeLayer(hybridTile);
+      baseTile.addTo(map);
+    }
+  });
+});
+
+let markers = [];
+function clearMarkers() { markers.forEach(m => map.removeLayer(m)); markers = []; }
+
+let sigunguCoords = {};
+fetch('../data/sigungu-coords.json').then(r => r.json()).then(d => sigunguCoords = d);
+
+function moveMapToSigungu(code) {
+  const coord = sigunguCoords[code];
+  if (coord) map.setView(coord, 15);
+}
+</script>
+<script>
+
+function renderDealList(items, dealType) {
+  const container = document.getElementById('deal-list');
+  if (!items || items.length === 0) {
+    container.innerHTML = '<p class="text-muted">해당 지역의 거래 내역이 없습니다.</p>';
+    return;
+  }
+
+  const isRent = dealType.includes('rent');
+  const isMulti = dealType.includes('multi');
+  const nameKey = isMulti ? '연립다세대' : '아파트';
+
+  const listHtml = items.map((item, index) => {
+    const name = item[nameKey] || '-';
+    const dong = item['법정동'] || '-';
+    const area = item['전용면적'] || '-';
+    const floor = item['층'] || '-';
+    const year = item['년'] || '-';
+    const month = item['월'] || '-';
+    const day = item['일'] || '-';
+
+    let priceHtml = '';
+    if (isRent) {
+      const deposit = item['보증금액'] || '0';
+      const monthly = item['월세금액'] || '0';
+      if (monthly === '0') {
+        priceHtml = `<span class="text-primary fw-bold">전세 ${deposit}만원</span>`;
+      } else {
+        priceHtml = `<span class="text-success fw-bold">월세 보증금 ${deposit} / ${monthly}만원</span>`;
+      }
+    } else {
+      const price = item['거래금액'] || '-';
+      priceHtml = `<span class="text-danger fw-bold">매매 ${price}만원</span>`;
+    }
+
+    return `
+      <div class="list-group-item list-group-item-action" style="cursor:pointer" onclick="showDetail(${index})">
+        <div class="d-flex justify-content-between align-items-start">
+          <strong>${name}</strong>
+          <small class="text-muted">${year}.${month}.${day}</small>
+        </div>
+        <div class="small mt-1">${priceHtml}</div>
+        <div class="small text-muted mt-1">면적 ${area}㎡ · ${floor}층 · ${dong}</div>
+      </div>`;
+  }).join('');
+
+  container.innerHTML = `<div class="list-group">${listHtml}</div>`;
+}
+
+let currentItems = [];
+let currentDealType = 'apt-deal';
+
+function showDetail(index) {
+  const item = currentItems[index];
+  if (!item) return;
+
+  const isRent = currentDealType.includes('rent');
+  const isMulti = currentDealType.includes('multi');
+  const nameKey = isMulti ? '연립다세대' : '아파트';
+
+  const name = item[nameKey] || '-';
+  document.getElementById('offcanvas-title').textContent = name;
+
+  let rows = '';
+  const fields = [
+    { key: nameKey, label: '건물명' },
+    { key: '법정동', label: '법정동' },
+    { key: '지번', label: '지번' },
+    { key: '전용면적', label: '전용면적(㎡)' },
+    { key: '층', label: '층' },
+    { key: '건축년도', label: '건축년도' },
+    { key: '년', label: '거래년도' },
+    { key: '월', label: '거래월' },
+    { key: '일', label: '거래일' },
+  ];
+
+  if (isRent) {
+    fields.push({ key: '보증금액', label: '보증금(만원)' });
+    fields.push({ key: '월세금액', label: '월세(만원)' });
+  } else {
+    fields.push({ key: '거래금액', label: '거래금액(만원)' });
+  }
+
+  fields.forEach(f => {
+    const val = item[f.key] !== undefined ? item[f.key] : '-';
+    rows += `<tr><th class="table-light" style="width:40%">${f.label}</th><td>${val}</td></tr>`;
+  });
+
+  document.getElementById('offcanvas-body').innerHTML = `
+    <table class="table table-bordered table-sm">
+      <tbody>${rows}</tbody>
+    </table>`;
+
+  const offcanvas = new bootstrap.Offcanvas(document.getElementById('dealOffcanvas'));
+  offcanvas.show();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+  const params = new URLSearchParams(location.search);
+  loadRegionData().then(() => {
+    populateSido('sido-select');
+    const sidoCode = params.get('sido');
+    if (sidoCode) {
+      document.getElementById('sido-select').value = sidoCode;
+      populateGugun(sidoCode, 'gugun-select');
+      document.getElementById('gugun-select').disabled = false;
+      const gugunCode = params.get('gugun');
+      if (gugunCode) {
+        document.getElementById('gugun-select').value = gugunCode;
+        populateDong(sidoCode, gugunCode, 'dong-select');
+        document.getElementById('dong-select').disabled = false;
+        const dongCode = params.get('dong');
+        if (dongCode) {
+          document.getElementById('dong-select').value = dongCode;
+          document.getElementById('search-btn').click();
+        }
+      }
+    }
+  });
+  updateNavbar();
+
+  document.getElementById('sido-select').addEventListener('change', function () {
+    populateGugun(this.value, 'gugun-select');
+    document.getElementById('dong-select').innerHTML = '<option value="">읍면동 선택</option>';
+    document.getElementById('gugun-select').disabled = !this.value;
+    document.getElementById('dong-select').disabled = true;
+  });
+
+  document.getElementById('gugun-select').addEventListener('change', function () {
+    const sido = document.getElementById('sido-select').value;
+    populateDong(sido, this.value, 'dong-select');
+    document.getElementById('dong-select').disabled = !this.value;
+  });
+
+  document.getElementById('search-btn').addEventListener('click', function () {
+    const dongSelect = document.getElementById('dong-select');
+    const dongName = dongSelect.options[dongSelect.selectedIndex]?.text;
+    const dealType = document.getElementById('deal-type-select').value;
+    currentDealType = dealType;
+
+    if (!dongSelect.value) {
+      alert('읍면동을 선택해주세요.');
+      return;
+    }
+
+    const gugunCode = document.getElementById('gugun-select').value;
+    moveMapToSigungu(gugunCode);
+
+    fetch(`../data/${dealType}.json`)
+      .then(res => res.json())
+      .then(data => {
+        const items = data.response.body.items.item;
+        const filtered = items.filter(item => item['법정동'].trim() === dongName);
+        currentItems = filtered;
+        renderDealList(filtered, dealType);
+        clearMarkers();
+        const coord = sigunguCoords[gugunCode];
+        if (coord) {
+          filtered.forEach((item, idx) => {
+            const isMulti = dealType.includes('multi');
+            const nameKey = isMulti ? '연립다세대' : '아파트';
+            const name = item[nameKey] || '-';
+            const offset = [
+              (Math.random() - 0.5) * 0.005,
+              (Math.random() - 0.5) * 0.005
+            ];
+            const marker = L.marker([coord[0] + offset[0], coord[1] + offset[1]])
+              .addTo(map)
+              .bindPopup(`<strong>${name}</strong><br>${item['거래금액'] || item['보증금액'] || ''}만원`);
+            marker.on('click', () => showDetail(idx));
+            markers.push(marker);
+          });
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        document.getElementById('deal-list').innerHTML = '<p class="text-danger">데이터를 불러오는 데 실패했습니다.</p>';
+      });
+  });
+
+});
+</script>
+</body>
+</html>

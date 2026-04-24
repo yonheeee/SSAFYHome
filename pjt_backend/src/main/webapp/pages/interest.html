@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관심지역 설정 - 구해줘 Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="../index.html">구해줘 Home</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <div class="d-flex align-items-center w-100" id="nav-logged-out">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="notice.html">공지사항</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#news-section">오늘의 뉴스</a></li>
+        </ul>
+        <div class="d-flex gap-2">
+          <a href="signup.html" class="btn btn-outline-light btn-sm">Sign Up</a>
+          <a href="login.html" class="btn btn-outline-light btn-sm">Login</a>
+        </div>
+      </div>
+      <div class="d-flex align-items-center w-100" id="nav-logged-in" style="display:none">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="notice.html">공지사항</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#news-section">오늘의 뉴스</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">자유글</a></li>
+          <li class="nav-item"><a class="nav-link" href="environment.html">주변탐방</a></li>
+          <li class="nav-item"><a class="nav-link" href="interest.html">관심지역 설정</a></li>
+          <li class="nav-item"><a class="nav-link" href="explore.html">관심지역 둘러보기</a></li>
+        </ul>
+        <div class="d-flex gap-2 align-items-center">
+          <span class="text-white small" id="nav-user-name"></span>
+          <a href="member.html" class="btn btn-outline-light btn-sm">회원정보</a>
+          <button onclick="logout()" class="btn btn-outline-light btn-sm">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="flex-grow-1">
+  <div class="container py-4">
+    <nav aria-label="breadcrumb">
+      <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+        <li class="breadcrumb-item active">관심 지역 등록</li>
+      </ol>
+    </nav>
+
+    <div class="card mx-auto" style="max-width:600px">
+      <div class="card-body">
+        <h3 class="card-title mb-4">관심 지역</h3>
+
+        <div class="mb-3">
+          <label for="sido" class="form-label">도/광역시</label>
+          <select class="form-select" id="sido">
+            <option value="">시/도 선택</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="gugun" class="form-label">시/구/군</label>
+          <select class="form-select" id="gugun">
+            <option value="">시/군/구 선택</option>
+          </select>
+        </div>
+        <div class="mb-3">
+          <label for="dong" class="form-label">동</label>
+          <select class="form-select" id="dong">
+            <option value="">읍/면/동 선택</option>
+          </select>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-warning" id="btn-delete-interest">삭제</button>
+          <button class="btn btn-warning" id="btn-add-interest">등록</button>
+        </div>
+
+        <hr>
+        <h5>등록된 관심지역</h5>
+        <div id="interest-list" class="list-group mt-2"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="bg-dark text-white py-4 mt-auto">
+  <div class="container">
+    <h5>Find Us</h5>
+    <p class="mb-1">(06234) 서울시 강남구 테헤란로 멀티스퀘어</p>
+    <p class="mb-1">1544-9001</p>
+    <p class="mb-0">admin@ssafy.com</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="../js/main.js"></script>
+<script>
+  let selectedInterestIndex = -1;
+
+  function loadInterestList() {
+    const list = document.getElementById('interest-list');
+    const interests = getInterests();
+    list.innerHTML = '';
+    if (interests.length === 0) {
+      list.innerHTML = '<div class="list-group-item text-muted">등록된 관심지역이 없습니다.</div>';
+      return;
+    }
+    interests.forEach(function(item, idx) {
+      const el = document.createElement('button');
+      el.type = 'button';
+      el.className = 'list-group-item list-group-item-action d-flex justify-content-between align-items-center';
+      el.textContent = item.sido + ' ' + item.gugun + ' ' + item.dong;
+      el.dataset.idx = idx;
+      el.addEventListener('click', function() {
+        document.querySelectorAll('#interest-list .list-group-item').forEach(function(e) {
+          e.classList.remove('active');
+        });
+        el.classList.add('active');
+        selectedInterestIndex = idx;
+      });
+      list.appendChild(el);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    if (!requireLogin()) return;
+    loadRegionData().then(() => populateSido('sido'));
+    loadInterestList();
+
+    document.getElementById('sido').addEventListener('change', function() {
+      populateGugun(this.value, 'gugun');
+      document.getElementById('dong').innerHTML = '<option value="">읍/면/동 선택</option>';
+    });
+
+    document.getElementById('gugun').addEventListener('change', function() {
+      const sido = document.getElementById('sido').value;
+      populateDong(sido, this.value, 'dong');
+    });
+
+    document.getElementById('btn-add-interest').addEventListener('click', function() {
+      const sidoSel = document.getElementById('sido');
+      const gugunSel = document.getElementById('gugun');
+      const dongSel = document.getElementById('dong');
+      if (!sidoSel.value || !gugunSel.value || !dongSel.value) {
+        alert('시/도, 시/군/구, 읍/면/동을 모두 선택해주세요.');
+        return;
+      }
+      const sido = sidoSel.options[sidoSel.selectedIndex].text;
+      const gugun = gugunSel.options[gugunSel.selectedIndex].text;
+      const dong = dongSel.options[dongSel.selectedIndex].text;
+      const interests = getInterests();
+      const duplicate = interests.some(function(item) {
+        return item.sido === sido && item.gugun === gugun && item.dong === dong;
+      });
+      if (duplicate) {
+        alert('이미 등록된 관심지역입니다.');
+        return;
+      }
+      interests.push({ sido: sido, gugun: gugun, dong: dong });
+      saveInterests(interests);
+      loadInterestList();
+      selectedInterestIndex = -1;
+    });
+
+    document.getElementById('btn-delete-interest').addEventListener('click', function() {
+      if (selectedInterestIndex < 0) {
+        alert('삭제할 관심지역을 선택해주세요.');
+        return;
+      }
+      const interests = getInterests();
+      interests.splice(selectedInterestIndex, 1);
+      saveInterests(interests);
+      selectedInterestIndex = -1;
+      loadInterestList();
+    });
+  });
+</script>
+</body>
+</html>

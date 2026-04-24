@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관심지역 둘러보기 - 구해줘 Home</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <link rel="stylesheet" href="../css/style.css">
+</head>
+<body class="d-flex flex-column min-vh-100">
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="../index.html">구해줘 Home</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <div class="d-flex align-items-center w-100" id="nav-logged-out">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="notice.html">공지사항</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#news-section">오늘의 뉴스</a></li>
+        </ul>
+        <div class="d-flex gap-2">
+          <a href="signup.html" class="btn btn-outline-light btn-sm">Sign Up</a>
+          <a href="login.html" class="btn btn-outline-light btn-sm">Login</a>
+        </div>
+      </div>
+      <div class="d-flex align-items-center w-100" id="nav-logged-in" style="display:none">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <li class="nav-item"><a class="nav-link" href="notice.html">공지사항</a></li>
+          <li class="nav-item"><a class="nav-link" href="../index.html#news-section">오늘의 뉴스</a></li>
+          <li class="nav-item"><a class="nav-link" href="#">자유글</a></li>
+          <li class="nav-item"><a class="nav-link" href="environment.html">주변탐방</a></li>
+          <li class="nav-item"><a class="nav-link" href="interest.html">관심지역 설정</a></li>
+          <li class="nav-item"><a class="nav-link active" href="explore.html">관심지역 둘러보기</a></li>
+        </ul>
+        <div class="d-flex gap-2 align-items-center">
+          <span class="text-white small" id="nav-user-name"></span>
+          <a href="member.html" class="btn btn-outline-light btn-sm">회원정보</a>
+          <button onclick="logout()" class="btn btn-outline-light btn-sm">Logout</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="flex-grow-1">
+  <div class="container py-4">
+    <h2 class="mb-4">관심지역 둘러보기</h2>
+
+    <!-- 업종 필터 -->
+    <div class="row g-2 mb-3">
+      <div class="col-md-3">
+        <select class="form-select" id="category-main">
+          <option value="">대분류 선택</option>
+          <option>음식</option>
+          <option>소매</option>
+          <option>생활서비스</option>
+          <option>관광/여가/오락</option>
+          <option>숙박</option>
+          <option>교육</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" id="category-mid">
+          <option value="">중분류 선택</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select class="form-select" id="category-sub">
+          <option value="">소분류 선택</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <button class="btn btn-primary w-100" id="btn-search-store">검색</button>
+      </div>
+    </div>
+
+    <!-- 검색 결과 요약 -->
+    <div id="search-result-summary" class="alert alert-info d-none mb-3"></div>
+
+    <div class="row">
+      <!-- 관심지역 목록 -->
+      <div class="col-md-4">
+        <h5>관심 지역 목록</h5>
+        <div id="explore-interests" class="list-group mt-2 mb-3"></div>
+
+        <h5>검색 결과</h5>
+        <div id="store-results" class="list-group mt-2" style="max-height:300px;overflow-y:auto;"></div>
+      </div>
+
+      <!-- 지도 영역 -->
+      <div class="col-md-8">
+        <ul class="nav nav-tabs mb-2" id="mapTabs">
+          <li class="nav-item">
+            <button class="nav-link active" data-tab="map">지도</button>
+          </li>
+          <li class="nav-item">
+            <button class="nav-link" data-tab="satellite">위성</button>
+          </li>
+        </ul>
+        <div id="map" style="height:450px;"></div>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="bg-dark text-white py-4 mt-auto">
+  <div class="container">
+    <h5>Find Us</h5>
+    <p class="mb-1">(06234) 서울시 강남구 테헤란로 멀티스퀘어</p>
+    <p class="mb-1">1544-9001</p>
+    <p class="mb-0">admin@ssafy.com</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="../js/main.js"></script>
+<script>
+const VWORLD_KEY = '9E281788-C8F2-328F-A965-E737BA72C694';
+const map = L.map('map').setView([37.5665, 126.978], 13);
+
+const baseTile = L.tileLayer(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Base/{z}/{y}/{x}.png`, {
+  attribution: '© VWorld', maxZoom: 19
+}).addTo(map);
+
+const satTile = L.tileLayer(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Satellite/{z}/{y}/{x}.jpeg`, {
+  attribution: '© VWorld', maxZoom: 19
+});
+
+const hybridTile = L.tileLayer(`https://api.vworld.kr/req/wmts/1.0.0/${VWORLD_KEY}/Hybrid/{z}/{y}/{x}.png`, {
+  maxZoom: 19
+});
+
+document.querySelectorAll('#mapTabs .nav-link').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('#mapTabs .nav-link').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    if (this.dataset.tab === 'satellite') {
+      map.removeLayer(baseTile);
+      satTile.addTo(map);
+      hybridTile.addTo(map);
+    } else {
+      map.removeLayer(satTile);
+      map.removeLayer(hybridTile);
+      baseTile.addTo(map);
+    }
+  });
+});
+
+let sigunguCoords = {};
+fetch('../data/sigungu-coords.json').then(r => r.json()).then(d => sigunguCoords = d);
+
+// === 업종 카테고리 데이터 ===
+const categoryData = {
+  '음식': {
+    '한식': ['백반/한정식', '국밥', '순대/곱창/막창'],
+    '중식': ['중화요리', '딤섬'],
+    '일식': ['초밥/회', '라멘', '돈가스'],
+    '양식': ['파스타', '피자', '스테이크'],
+    '패스트푸드': ['햄버거', '치킨', '샌드위치'],
+    '카페/디저트': ['커피전문점', '베이커리', '아이스크림']
+  },
+  '소매': {
+    '슈퍼마켓': ['대형마트', '중소형슈퍼'],
+    '편의점': ['편의점'],
+    '의류': ['남성의류', '여성의류', '아동의류'],
+    '서적': ['서점', '중고서적']
+  },
+  '생활서비스': {
+    '세탁': ['세탁소', '코인세탁'],
+    '미용': ['미용실', '네일샵'],
+    '수리': ['가전수리', '시계수리']
+  },
+  '관광/여가/오락': {
+    '관광명소': ['공원', '박물관', '미술관'],
+    '오락': ['PC방', '노래방', '볼링장'],
+    '스포츠': ['헬스장', '수영장', '골프연습장']
+  },
+  '숙박': {
+    '호텔': ['특급호텔', '비즈니스호텔'],
+    '모텔': ['모텔'],
+    '게스트하우스': ['게스트하우스', '호스텔']
+  },
+  '교육': {
+    '학원': ['입시학원', '어학원', '예체능학원'],
+    '유치원': ['유치원', '어린이집'],
+    '학교': ['초등학교', '중학교', '고등학교']
+  }
+};
+
+// === 더미 상가 데이터 생성 ===
+const storeNames = {
+  '음식': ['맛나분식', '황금식당', '행복한밥상', '엄마손칼국수', '미소반점', '스시히로', '파스타하우스', '버거킹', '교촌치킨', '카페베네', '빽다방', '파리바게뜨'],
+  '소매': ['이마트', 'GS25', 'CU편의점', '세븐일레븐', 'ABC마트', '다이소', '교보문고', '영풍문고'],
+  '생활서비스': ['크린토피아', '코인워시', '이철헤어', '블루클럽', '네일아트', '삼성전자서비스'],
+  '관광/여가/오락': ['서울숲공원', '국립중앙박물관', '롯데시네마', 'CGV', 'PC플러스', '코인노래방', '볼링플러스'],
+  '숙박': ['롯데호텔', '이비스호텔', '모텔25', '코리아게스트하우스', '호스텔코리아'],
+  '교육': ['메가스터디', '영어마을', '피아노학원', '해법수학', '리틀팍스', '한솔유치원']
+};
+
+function generateStores(centerLat, centerLng, category) {
+  const names = storeNames[category] || storeNames['음식'];
+  const count = 5 + Math.floor(Math.random() * 8);
+  const stores = [];
+  for (let i = 0; i < count; i++) {
+    const lat = centerLat + (Math.random() - 0.5) * 0.015;
+    const lng = centerLng + (Math.random() - 0.5) * 0.02;
+    stores.push({
+      name: names[i % names.length] + (i >= names.length ? ' ' + (Math.floor(i / names.length) + 1) + '호점' : ''),
+      lat: lat,
+      lng: lng,
+      category: category,
+      address: '서울시 일대',
+      phone: '02-' + (1000 + Math.floor(Math.random() * 9000)) + '-' + (1000 + Math.floor(Math.random() * 9000))
+    });
+  }
+  return stores;
+}
+
+// === 마커 관리 ===
+let storeMarkers = [];
+let interestMarkers = [];
+let selectedInterest = null;
+
+function clearStoreMarkers() {
+  storeMarkers.forEach(m => map.removeLayer(m));
+  storeMarkers = [];
+}
+
+function clearInterestMarkers() {
+  interestMarkers.forEach(m => map.removeLayer(m));
+  interestMarkers = [];
+}
+
+// === 상가 검색 & 마커 표시 ===
+function searchStores() {
+  const mainCat = document.getElementById('category-main').value;
+  if (!mainCat) {
+    alert('업종 대분류를 선택해주세요.');
+    return;
+  }
+  if (!selectedInterest) {
+    alert('좌측 관심지역 목록에서 지역을 선택해주세요.');
+    return;
+  }
+
+  const midCat = document.getElementById('category-mid').value;
+  const subCat = document.getElementById('category-sub').value;
+  const center = map.getCenter();
+  const stores = generateStores(center.lat, center.lng, mainCat);
+
+  clearStoreMarkers();
+  const resultContainer = document.getElementById('store-results');
+  resultContainer.innerHTML = '';
+
+  const storeIcon = L.divIcon({
+    html: '<div style="background:#0d6efd;color:#fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:bold;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,.3);">S</div>',
+    iconSize: [28, 28],
+    iconAnchor: [14, 14],
+    className: ''
+  });
+
+  const filterLabel = mainCat + (midCat ? ' > ' + midCat : '') + (subCat ? ' > ' + subCat : '');
+  const summary = document.getElementById('search-result-summary');
+  summary.classList.remove('d-none');
+  summary.textContent = `"${filterLabel}" 검색 결과: ${selectedInterest.sido} ${selectedInterest.gugun} ${selectedInterest.dong} 주변 ${stores.length}개 업소`;
+
+  stores.forEach(function(store) {
+    const marker = L.marker([store.lat, store.lng], { icon: storeIcon }).addTo(map);
+    marker.bindPopup(
+      '<div style="min-width:180px;">' +
+      '<strong>' + store.name + '</strong><br>' +
+      '<small class="text-muted">' + filterLabel + '</small><br>' +
+      '<small>' + store.phone + '</small>' +
+      '</div>'
+    );
+    storeMarkers.push(marker);
+
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'list-group-item list-group-item-action py-2';
+    el.innerHTML = '<div class="fw-semibold">' + store.name + '</div><small class="text-muted">' + store.phone + '</small>';
+    el.addEventListener('click', function() {
+      map.setView([store.lat, store.lng], 16);
+      marker.openPopup();
+    });
+    resultContainer.appendChild(el);
+  });
+}
+
+// === 관심지역 목록 ===
+function loadExploreInterests() {
+  const container = document.getElementById('explore-interests');
+  const interests = getInterests();
+  container.innerHTML = '';
+  if (interests.length === 0) {
+    container.innerHTML = '<div class="list-group-item text-muted">등록된 관심지역이 없습니다.<br><a href="interest.html">관심지역 설정</a>에서 먼저 등록해주세요.</div>';
+    return;
+  }
+  interests.forEach(function(item) {
+    const el = document.createElement('button');
+    el.type = 'button';
+    el.className = 'list-group-item list-group-item-action';
+    el.textContent = item.sido + ' ' + item.gugun + ' ' + item.dong;
+    el.addEventListener('click', function() {
+      document.querySelectorAll('#explore-interests .list-group-item').forEach(e => e.classList.remove('active'));
+      el.classList.add('active');
+      selectedInterest = item;
+
+      const match = sigunguData.find(s => s.name === item.gugun);
+      if (match && sigunguCoords[match.code]) {
+        const coord = sigunguCoords[match.code];
+        map.setView(coord, 15);
+        clearInterestMarkers();
+        const marker = L.marker(coord).addTo(map)
+          .bindPopup('<strong>' + item.sido + ' ' + item.gugun + ' ' + item.dong + '</strong>')
+          .openPopup();
+        interestMarkers.push(marker);
+      }
+
+      // 업종이 선택되어 있으면 자동 검색
+      if (document.getElementById('category-main').value) {
+        searchStores();
+      }
+    });
+    container.appendChild(el);
+  });
+}
+
+// === 초기화 ===
+document.addEventListener('DOMContentLoaded', function() {
+  if (!requireLogin()) return;
+  loadRegionData().then(() => loadExploreInterests());
+
+  document.getElementById('category-main').addEventListener('change', function() {
+    const mid = document.getElementById('category-mid');
+    const sub = document.getElementById('category-sub');
+    mid.innerHTML = '<option value="">중분류 선택</option>';
+    sub.innerHTML = '<option value="">소분류 선택</option>';
+    const data = categoryData[this.value];
+    if (data) {
+      Object.keys(data).forEach(function(key) {
+        mid.innerHTML += '<option value="' + key + '">' + key + '</option>';
+      });
+    }
+  });
+
+  document.getElementById('category-mid').addEventListener('change', function() {
+    const mainVal = document.getElementById('category-main').value;
+    const sub = document.getElementById('category-sub');
+    sub.innerHTML = '<option value="">소분류 선택</option>';
+    const data = categoryData[mainVal];
+    if (data && data[this.value]) {
+      data[this.value].forEach(function(item) {
+        sub.innerHTML += '<option value="' + item + '">' + item + '</option>';
+      });
+    }
+  });
+
+  document.getElementById('btn-search-store').addEventListener('click', searchStores);
+});
+</script>
+</body>
+</html>
