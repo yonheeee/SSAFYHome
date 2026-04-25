@@ -115,7 +115,7 @@ public class AuthController extends HttpServlet implements ControllerHelper {
         if ("XMLHttpRequest".equals(xhr)) {
             sendJson(response, buildResult(true, null));
         } else {
-            redirect(response, request.getContextPath() + "/main");
+            redirect(request, response, request.getContextPath() + "/main");
         }
     }
 

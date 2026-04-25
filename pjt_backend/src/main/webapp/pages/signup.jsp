@@ -1,3 +1,4 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -12,7 +13,7 @@
 
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
   <div class="container">
-    <a class="navbar-brand fw-bold" href="../index.html">구해줘 Home</a>
+    <a class="navbar-brand fw-bold" href="${pageContext.request.contextPath}/main?action=index">구해줘 Home</a>
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
       <span class="navbar-toggler-icon"></span>
     </button>
@@ -20,17 +21,17 @@
       <div class="d-flex align-items-center w-100" id="nav-logged-out">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item"><a class="nav-link" href="notice.html">공지사항</a></li>
-          <li class="nav-item"><a class="nav-link" href="../index.html#news-section">오늘의 뉴스</a></li>
+          <li class="nav-item"><a class="nav-link" href="../${pageContext.request.contextPath}/main?action=index#news-section">오늘의 뉴스</a></li>
         </ul>
         <div class="d-flex gap-2">
-          <a href="signup.html" class="btn btn-outline-light btn-sm">Sign Up</a>
-          <a href="login.html" class="btn btn-outline-light btn-sm">Login</a>
+          <a href="signup.jsp" class="btn btn-outline-light btn-sm">Sign Up</a>
+          <a href="login.jsp" class="btn btn-outline-light btn-sm">Login</a>
         </div>
       </div>
       <div class="d-flex align-items-center w-100" id="nav-logged-in" style="display:none">
         <ul class="navbar-nav me-auto mb-2 mb-lg-0">
           <li class="nav-item"><a class="nav-link" href="notice.html">공지사항</a></li>
-          <li class="nav-item"><a class="nav-link" href="../index.html#news-section">오늘의 뉴스</a></li>
+          <li class="nav-item"><a class="nav-link" href="../${pageContext.request.contextPath}/main?action=index#news-section">오늘의 뉴스</a></li>
           <li class="nav-item"><a class="nav-link" href="#">자유글</a></li>
           <li class="nav-item"><a class="nav-link" href="environment.html">주변탐방</a></li>
           <li class="nav-item"><a class="nav-link" href="interest.html">관심지역 설정</a></li>
@@ -50,7 +51,7 @@
   <div class="container">
     <nav aria-label="breadcrumb" class="mb-4">
       <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="../index.html">Home</a></li>
+        <li class="breadcrumb-item"><a href="${pageContext.request.contextPath}/main?action=index">Home</a></li>
         <li class="breadcrumb-item active">회원 가입</li>
       </ol>
     </nav>
@@ -90,17 +91,25 @@
   </div>
 </main>
 
-<footer class="bg-dark text-white py-4 mt-auto">
-  <div class="container">
-    <h5>Find Us</h5>
-    <p class="mb-1"><i class="bi bi-geo-alt"></i> (06234) 서울시 강남구 테헤란로 멀티스퀘어</p>
-    <p class="mb-1"><i class="bi bi-telephone"></i> 1544-9001</p>
-    <p class="mb-0"><i class="bi bi-envelope"></i> admin@ssafy.com</p>
-  </div>
+<footer class="bg-dark text-white py-4">
+	<div class="container">
+		<div class="row">
+			<div class="col-md-4">
+				<h5>Contact Us</h5>
+				<p class="mb-1">(34153) 대전 유성구 동서대로 98-39</p>
+				<p class="mb-1">042-820-7400</p>
+				<p class="mb-0">ssafy@ssafy.com</p>
+			</div>
+			<div
+				class="col-md-8 d-flex align-items-center justify-content-md-end">
+				<p class="mb-0 text-muted">&copy; 2026 구해줘 Home. All rights reserved.</p>
+			</div>
+		</div>
+	</div>
 </footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="../js/main.js"></script>
+<script src="${pageContext.request.contextPath}/js/main.js"></script>
 <script>
 document.getElementById('signup-form').addEventListener('submit', async function(e) {
   e.preventDefault();
@@ -142,7 +151,7 @@ document.getElementById('signup-form').addEventListener('submit', async function
 
     if (json.result === 'success') {
       alert('회원가입이 완료되었습니다.');
-      location.href = 'login.html';
+      location.href = 'login.jsp';
     } else {
       alert(json.message || '회원가입에 실패했습니다.');
     }

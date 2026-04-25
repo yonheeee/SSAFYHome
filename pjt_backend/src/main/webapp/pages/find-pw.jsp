@@ -1,3 +1,4 @@
+<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
 <!DOCTYPE html>
 <html lang="ko">
 <head>
@@ -5,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>비밀번호 찾기 - 구해줘 Home</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="../css/style.css">
+  <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
 </head>
 <body class="bg-light">
 
@@ -31,7 +32,7 @@
       </form>
 
       <div class="mt-3">
-        <a href="login.html">로그인으로 돌아가기</a>
+        <a href="${pageContext.request.contextPath}/pages/login.jsp">로그인으로 돌아가기</a>
       </div>
     </div>
   </div>
@@ -64,7 +65,7 @@ document.getElementById('find-pw-form').addEventListener('submit', async functio
 
     if (json.result === 'success') {
       alert(`회원님의 비밀번호는 ${json.password} 입니다.`);
-      location.href = 'login.html';
+      location.href = 'login.jsp';
     } else {
       alert(json.message || '일치하는 회원 정보가 없습니다.');
     }

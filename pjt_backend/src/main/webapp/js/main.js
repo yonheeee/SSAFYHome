@@ -1,4 +1,40 @@
+// === 경로 설정 : /data의 json파일 확인
+const contextPath = window.ROOT_PATH || window.location.pathname.substring(0, window.location.pathname.indexOf("/", 2));
+const dataBasePath = `${contextPath}/data`;
+
 // === 경로 헬퍼 ===
+function getUsers() {
+    return JSON.parse(localStorage.getItem('users') || '[]');
+}
+
+function saveUsers(users) {
+    localStorage.setItem('users', JSON.stringify(users));
+}
+
+function getCurrentUser() {
+    return JSON.parse(localStorage.getItem('currentUser') || 'null');
+}
+
+function setCurrentUser(user) {
+    localStorage.setItem('currentUser', JSON.stringify(user));
+}
+
+function getNotices() {
+    return JSON.parse(localStorage.getItem('notices') || '[]');
+}
+
+function saveNotices(notices) {
+    localStorage.setItem('notices', JSON.stringify(notices));
+}
+
+function getInterests() {
+    return JSON.parse(localStorage.getItem('interests') || '[]');
+}
+
+function saveInterests(interests) {
+    localStorage.setItem('interests', JSON.stringify(interests));
+}
+
 const isInPages = location.pathname.includes('/pages/');
 const API_BASE  = isInPages ? '..' : '.';
 
@@ -28,7 +64,7 @@ async function logout() {
     console.error('로그아웃 실패:', e);
   }
 
-  location.href = isInPages ? '../index.html' : 'index.html';
+  location.href = isInPages ? '../index.jsp' : 'index.jsp';
 }
 
 async function requireLogin() {
@@ -94,8 +130,6 @@ function formatPrice(price) {
   return num.toLocaleString() + '만';
 }
 
-// === 지역 데이터 ===
-const dataBasePath = isInPages ? '../data' : 'data';
 
 let sidoData = [];
 let sigunguData = [];
@@ -111,6 +145,37 @@ async function loadRegionData() {
   sidoData = sido;
   sigunguData = sigungu;
   emdData = emd;
+  
+  if (document.getElementById('hero-sido')) {
+      populateSido('hero-sido');
+  }
+}
+
+async function initRegionSelects(sidoId, gugunId, dongId, initialValues = {}) {
+    await loadRegionData(); // 데이터 로드 완료까지 대기
+
+    populateSido(sidoId);
+
+    const sidoSel = document.getElementById(sidoId);
+    const gugunSel = document.getElementById(gugunId);
+    const dongSel = document.getElementById(dongId);
+
+    // 1. 시도 초기값 설정
+    if (initialValues.sido) {
+        sidoSel.value = initialValues.sido;
+        populateGugun(initialValues.sido, gugunId);
+
+        // 2. 구군 초기값 설정
+        if (initialValues.gugun) {
+            gugunSel.value = initialValues.gugun;
+            populateDong(initialValues.sido, initialValues.gugun, dongId);
+
+            // 3. 동 초기값 설정
+            if (initialValues.dong) {
+                dongSel.value = initialValues.dong;
+            }
+        }
+    }
 }
 
 function populateSido(selectId) {
@@ -161,13 +226,28 @@ function populateDong(sidoCode, gugunCode, selectId) {
     });
 }
 
-// === 페이지 로드 ===
-document.addEventListener('DOMContentLoaded', async function () {
-  await updateNavbar();
-
-  try {
+async function autoSelectRegion(sidoId, gugunId, dongId, sVal, gVal, dVal) {
     await loadRegionData();
-  } catch (e) {
-    console.error('지역 데이터 로딩 실패:', e);
-  }
+
+    populateSido(sidoId);
+
+    if (sVal) {
+        document.getElementById(sidoId).value = sVal;
+        populateGugun(sVal, gugunId);
+
+        if (gVal) {
+            document.getElementById(gugunId).value = gVal;
+            populateDong(sVal, gVal, dongId);
+
+            if (dVal) {
+                document.getElementById(dongId).value = dVal;
+            }
+        }
+    }
+}
+
+// 페이지 로드 시 navbar 업데이트 및 지역 데이터 로드
+document.addEventListener('DOMContentLoaded', function() {
+    updateNavbar();
+    loadRegionData();
 });

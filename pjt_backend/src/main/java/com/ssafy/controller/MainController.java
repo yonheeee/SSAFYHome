@@ -39,18 +39,7 @@ public class MainController extends HttpServlet implements ControllerHelper {
 	@Override
 	protected void doGet(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-
-		HttpSession session = request.getSession(false);
-
-		if (session != null && session.getAttribute("loginMember") != null) {
-			Member loginMember = (Member) session.getAttribute("loginMember");
-			request.setAttribute("isLoggedIn", true);
-			request.setAttribute("userName", loginMember.getName());
-		} else {
-			request.setAttribute("isLoggedIn", false);
-		}
-
-		request.getRequestDispatcher("/index.jsp").forward(request, response);
+		process(request, response);
 	}
 
 	// ─── POST ────────────────────────────────────────────────────────────────
@@ -61,6 +50,31 @@ public class MainController extends HttpServlet implements ControllerHelper {
 	@Override
 	protected void doPost(HttpServletRequest request, HttpServletResponse response)
 			throws ServletException, IOException {
-		doGet(request, response);
+		process(request, response);
 	}
+	
+	/**
+     * 모든 요청을 한곳에서 처리 (중복 제거)
+     */
+    private void process(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        
+        // 1. 공통 로직: 세션 정보 확인 (for html)
+        HttpSession session = request.getSession(false);
+        if (session != null && session.getAttribute("loginMember") != null) {
+            Member loginMember = (Member) session.getAttribute("loginMember");
+            request.setAttribute("isLoggedIn", true);
+            request.setAttribute("userName", loginMember.getName());
+        } else {
+            request.setAttribute("isLoggedIn", false);
+        }
+
+        // 2. 분기 처리: action 파라미터에 따른 이동 (for jsp)
+        String action = getActionParameter(request, response);
+
+        switch (action) {
+            case "index" -> forward(request, response, "/index.jsp");
+            default -> response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        }
+    }
 }
